@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events @ Bike Lexington</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header,
+        main,
+        section,
+        footer {
+            width: 90%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Events @ Bike Lexington</h1>
+    </header>
+    <main>
+        <ul id="events"></ul>
+    </main>
+    <section>
+        <h2>Map</h2>
+        <div id="map"></div>
+    </section>
+    <section>
+        <h2>Resources</h2>
+        <ul id="resources"></ul>
+    </section>
+    <footer>
+        <p>Bike Lexington. If you like to contribute DIY lo-fi, let us know.</p>
+    </footer>
+    <script src="https://unpkg.com/papaparse@5.5.2/papaparse.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg=="
+        crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdLE3w=="
+        crossorigin="" />
+    <script>
+
+        function getEvents() {
+            const today = new Date();
+            const toMap = [];
+            Papa.parse('events.csv', {
+                download: true,
+                header: true,
+                complete: function (results) {
+                    const eventsList = document.querySelector('#events');
+                    const events = results.data;
+                    events.sort((a, b) => new Date(a.date + a["meet time"]) - new Date(b.date + b["meet time"]));
+
+                    events.forEach(event => {
+                        const listItem = document.createElement('li');
+                        const { title, date, time, location, address, description, organizer, url, lat, lon } = event;
+                        const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric'
+                        });
+
+                        listItem.innerHTML += `<a href="${url}">${title}</a> on ${formattedDate} by ${organizer}`;
+                        listItem.innerHTML += `<br>${description}`;
+                        const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', ' + address)}`;
+                        listItem.innerHTML += `<br>Start: ${location}, <a href="${googleMapsLink}">${address}</a>, ${time}`;
+                        eventsList.appendChild(listItem);
+                        if (lat && lon) {
+                            toMap.push({
+                                popup: `<a href="${url}">${title}</a> on ${formattedDate} by ${organizer}`,
+                                streetview: ` http://www.google.com/maps?layer=c&cbll=${lat},${lon}`,
+                                googleMapsLink: googleMapsLink,
+                                lat: lat,
+                                lon: lon
+                            });
+
+                        };
+                    });
+                    mapEvents(toMap);
+                    getResources();
+                }
+            });
+        }
+
+        function mapEvents(toMap) {
+            const map = L.map('map').setView([38.0406, -84.5037], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 20,
+                subdomains: 'abcd',
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }).addTo(map);
+            const bounds = L.latLngBounds();
+            toMap.forEach(event => {
+                let { popup, streetview, googleMapsLink, lat, lon } = event;
+                popup += `<br><a href="${googleMapsLink}" target="_blank">Google Maps</a> | <a href="${streetview}" target="_blank">Street View</a>`;
+                bounds.extend([lat, lon]);
+                const marker = L.marker([lat, lon]).addTo(map);
+                marker.bindPopup(popup);
+            });
+            map.fitBounds(bounds,
+                {
+                    padding: [20, 20],
+                    animate: false,
+                });
+        }
+
+        function getResources() {
+            Papa.parse('resources.csv', {
+                download: true,
+                header: true,
+                complete: function (results) {
+                    const resourcesList = document.querySelector('#resources');
+                    const resources = results.data;
+                    resources.forEach(resource => {
+                        const listItem = document.createElement('li');
+                        const { name, description, type, url } = resource;
+                        listItem.innerHTML += `<a href="${url}">${name}</a> | ${type}`;
+                        listItem.innerHTML += `<br>${description}`;
+                        resourcesList.appendChild(listItem);
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', getEvents);
+    </script>
+</body>
+
+</html>
