@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community event map</title>
+</head>
+
+<body>
+    <!-- Add script to the <head> of your page to load the embeddable map component -->
+    <script type="module"
+        src="https://js.arcgis.com/embeddable-components/4.32/arcgis-embeddable-components.esm.js"></script>
+    <!-- Add custom element to <body> of your page -->
+    <arcgis-embedded-map style="height:600px;width:100%;" item-id="1707aa0f126e4aa09189b4c2ad570f35" theme="light"
+        heading-enabled information-enabled portal-url="https://uky-edu.maps.arcgis.com"></arcgis-embedded-map>
+    <button id="btn">Add event</button>
+    <script>
+        document.getElementById('btn').addEventListener('click', function () {
+            window.open('https://arcg.is/1TTH810', '_blank');
+        });
+    </script>
+</body>
+
+</html>
