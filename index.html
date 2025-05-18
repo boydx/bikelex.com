@@ -76,31 +76,36 @@
                 complete: function (results) {
                     const eventsList = document.querySelector('#events');
                     const events = results.data;
-                    events.sort((a, b) => new Date(a.date + a["meet time"]) - new Date(b.date + b["meet time"]));
+                    events.sort((a, b) => new Date(a.date + " " + a["time"]) - new Date(b.date + " " + b["time"]));
 
                     events.forEach(event => {
                         const listItem = document.createElement('li');
                         const { title, date, time, location, address, description, organizer, url, lat, lon } = event;
                         const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                            timeZone: 'UTC',
                             month: 'long',
                             day: 'numeric'
                         });
 
-                        listItem.innerHTML += `<a href="${url}">${title}</a> on ${formattedDate} by ${organizer}`;
-                        listItem.innerHTML += `<br>${description}`;
-                        const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', ' + address)}`;
-                        listItem.innerHTML += `<br>Start: ${location}, <a href="${googleMapsLink}">${address}</a>, ${time}`;
-                        eventsList.appendChild(listItem);
-                        if (lat && lon) {
-                            toMap.push({
-                                popup: `<a href="${url}">${title}</a> on ${formattedDate} by ${organizer}`,
-                                streetview: ` http://www.google.com/maps?layer=c&cbll=${lat},${lon}`,
-                                googleMapsLink: googleMapsLink,
-                                lat: lat,
-                                lon: lon
-                            });
+                        if (new Date(date + " " + time) > today) {
+                            listItem.innerHTML += `<a href="${url}">${title}</a> on ${formattedDate} by ${organizer}`;
+                            listItem.innerHTML += `<br>${description}`;
+                            const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', ' + address)}`;
+                            listItem.innerHTML += `<br>Start: ${location}, <a href="${googleMapsLink}">${address}</a>, ${time}`;
+                            eventsList.appendChild(listItem);
+                            if (lat && lon) {
+                                toMap.push({
+                                    popup: `<a href="${url}">${title}</a> on ${formattedDate} by ${organizer}`,
+                                    streetview: ` http://www.google.com/maps?layer=c&cbll=${lat},${lon}`,
+                                    googleMapsLink: googleMapsLink,
+                                    lat: lat,
+                                    lon: lon
+                                });
 
-                        };
+                            };
+                        }
+
+
                     });
                     mapEvents(toMap);
                     getResources();
