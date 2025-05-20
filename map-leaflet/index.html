@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdLE3w=="
+        crossorigin="" />
+    <link rel="stylesheet" href="Control.FullScreen.css" />
+    <link rel="stylesheet" href="L.Control.Locate.min.css" />
+
+    <style>
+        #map {
+            height: 300px;
+            width: 100%;
+            background-color: aliceblue;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map">
+    </div>
+    <header>
+        <h1>Events @ Bike Lexington </h1>
+        <button id="btn">Add event</button>
+    </header>
+    <main>
+        <h2>Upcoming</h2>
+        <ul id="events"></ul>
+        <h2>Past</h2>
+        <ul id="past-events"></ul>
+    </main>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg=="
+        crossorigin=""></script>
+    <script src="https://unpkg.com/esri-leaflet@3.0.16/dist/esri-leaflet.js"
+        integrity="sha512-hKhm/iAMa3pdfauV80+7V88AMkSitygYUtbCOr/85K6gSYAlSm7Q4BfAYOQP2LS7zJMxu23lvQ+qelJyQtMGHw=="
+        crossorigin=""></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js"
+        integrity="sha512-WRT8ZGC7oShPZvcFLUL25MhdK3L9YuoKJKdc2aNXM2C/NZ3Laik62wsV0hCu9NLXO6z2CjLRbQu+hWNjlAA5Ew=="
+        crossorigin=""></script>
+    <script src="https://unpkg.com/esri-leaflet-static-basemap-tile@1.1.1/dist/esri-leaflet-static-basemap-tile.js"
+        integrity="sha512-qau4BpQ1dy05lvhLEb8lgDd5lEhHq4RXjEzLKY8v0ZAdNq3rCxZF9JA4COQx9FKF1aQ8sYgdbN7cPgOCLmYiSQ=="
+        crossorigin=""></script>
+    <script src="https://unpkg.com/esri-leaflet-renderers@3.0.1/dist/esri-leaflet-renderers.js"
+        integrity="sha512-ObP+hL762A0l3J0MfLlH5cEfpDiN0ItUJwm71EZ/X/EMsLyOMOW2GQHO8i/nLvseh8n68/UDjIev2nYwCtYqHQ=="
+        crossorigin=""></script>
+    <script src="Control.FullScreen.js"></script>
+    <script src="L.Control.Locate.min.js"></script>
+    <script>
+
+        document.getElementById('btn').addEventListener('click', function () {
+            window.open('https://arcg.is/1TTH810', '_blank');
+        });
+
+        /* Use for API key authentication */
+        const accessToken = "YOUR_ACCESS_TOKEN";
+
+        const renderingRule = {
+            rasterFunction: "Hillshade",
+            rasterFunctionArguments: {
+                "HillshadeType": 0,
+                Azimuth: 270,
+                Altitude: 60,
+                ZFactor: 1,
+                "RemoveEdgeEffect": true,
+
+            },
+            variableName: "DEM"
+        };
+        // sample server in this example is not CORS enabled, so use JSONP
+        // L.esri.get = L.esri.get.JSONP;
+
+        const map = L.map('map', {
+
+            attributionControl: false,
+            fullscreenControl: true,
+            fullscreenControlOptions: {
+                position: 'topleft'
+            }
+            // dragging: false,
+            // scrollWheelZoom: false,
+            // touchZoom: false,
+            // doubleClickZoom: false,
+            // boxZoom: false,
+            // keyboard: false
+        }).setView([38.0406, -84.5037], 13);
+
+        L.control.locate({
+            locateOptions: {
+                enableHighAccuracy: true
+            }
+        }).addTo(map);
+
+
+
+        const events = L.esri.featureLayer({
+            url: "https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0",
+            style: initialStyle,
+            where: "1=1",
+        })
+
+        let load = 0;
+        events.on('load', iterateFeatures);
+
+        events.addTo(map);
+
+        const warnings = L.esri.featureLayer({
+            url: "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NOAA_short_term_warnings_v1/FeatureServer/0",
+        }).addTo(map);
+
+
+
+        // L.esri.Vector.vectorTileLayer(
+        //     "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+        //     {
+        //         style: function (style) {
+        //             console.log(style)
+        //             return style
+        //         }
+        //     }
+        // ).addTo(map);
+
+        const hillshade = L.esri
+            .imageMapLayer({
+                url: "https://kyraster.ky.gov/arcgis/rest/services/ElevationServices/Ky_DSM_First_Return_5FT_Phase1/ImageServer",
+                renderingRule: renderingRule,
+                opacity: 0.3,
+                // useCors: false
+            })
+            .addTo(map);
+
+        L.esri.Vector.vectorTileLayer(
+            "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+            { opacity: 1 }
+        ).addTo(map);
+
+        let identifiedPixel;
+
+        map.on("click", function (e) {
+            if (identifiedPixel) {
+                console.log(identifiedPixel);
+            }
+            hillshade
+                .identify()
+                .at(e.latlng)
+                .run(function (error, results) {
+                    if (error) {
+                        console.error(error);
+                        return;
+                    }
+
+                    identifiedPixel = results.pixel;
+                    console.log(identifiedPixel.properties.value + " feet");
+                });
+        });
+
+        function initialStyle(feature) {
+            const today = new Date();
+            const oneWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const pastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const props = feature.properties;
+            const startDate = new Date(props.date_and_time_of_the_event);
+            const style = {
+                color: "blue",
+                fillColor: "blue",
+                fillOpacity: 0.5,
+                weight: 1,
+                opacity: 1,
+            };
+            if (startDate < pastWeek) {
+                style.opacity = 0
+                style.fillOpacity = 0
+
+            } else if (startDate > pastWeek) {
+                style.opacity = 1
+                style.fillOpacity = 0
+            }
+
+            if (startDate > oneWeek) {
+                style.opacity = 0
+                style.fillOpacity = 1
+            } else if (startDate > today) {
+                style.opacity = 1
+                style.fillOpacity = 1
+                style.fillColor = "green"
+            }
+            return style
+        }
+
+        async function iterateFeatures() {
+            if (load > 0) {
+                return
+            }
+            load++;
+            const promises = [];
+            events.eachFeature(function (layer) {
+                const attachments = `https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0/${layer.feature.id}/attachments/?f=json`
+                promises.push(fetch(attachments).then(response => response.json()));
+            });
+            try {
+                const data = await Promise.all(promises);
+                const filtered = data.filter(item => item.attachmentInfos.length !== 0);
+                makeContent(events, filtered)
+
+            } catch (error) {
+                console.error("Error during fetches:", error);
+            }
+
+        }
+        function makeContent(events, data) {
+            console.log(events)
+            const content = [];
+            const today = new Date();
+            events.eachFeature(layer => {
+                const l = {};
+                const props = layer.feature.properties;
+                l.title = props.name_of_the_event;
+                l.date = props.date_and_time_of_the_event;
+                l.time = new Date(l.date).toLocaleDateString('en-US', {
+                    timeZone: 'America/New_York',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                });
+                l.location = props.address_of_event;
+                l.desc = props.description_of_event;
+                l.audience = props.primary_audience;
+                l.url = "#";
+                l.org = "organizer";
+                l.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.location)}`;
+                data.find(element => {
+                    if (element.attachmentInfos[0].parentGlobalId === props.globalid) {
+                        props.img = `https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0/${layer.feature.id}/attachments/${element.attachmentInfos[0].id}`;
+
+                        // return
+                    }
+                });
+                l.img = props.img ? props.img + "?w=400" : "https://live.staticflickr.com/4452/37229750374_cebbe47821_w.jpg";
+                const popupContent = `<h2>${l.title}</h2><h3>${l.time}</h3>
+                <p><a href="${l.googleMapsLink}">${l.location}</a></p>
+                <p>For: ${l.audience}</p>
+                    <img src="${l.img}" alt="Event Image" style="width: 300px; height: auto;">
+                    <p>${l.desc}</p>`;
+                layer.bindPopup(popupContent);
+                content.push(l);
+            });
+            const eventsList = document.querySelector('#events');
+            const pastEventsList = document.querySelector('#past-events');
+            content.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            content.forEach(event => {
+                const listItem = document.createElement('li');
+                const { title, date, time, location, desc, url, organizer, googleMapsLink } = event;
+                const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                    timeZone: 'UTC',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                listItem.innerHTML += `<a href="${url}">${title}</a> on ${time} by ${organizer}
+                            <br>${desc}
+                            <br>Start: <a href="${googleMapsLink}">${location}</a>, ${time}`;
+                if (new Date(date) > today) {
+                    eventsList.appendChild(listItem);
+                } else {
+                    pastEventsList.appendChild(listItem);
+                }
+            })
+        }
+
+
+
+
+    </script>
+</body>
+
+</html>
