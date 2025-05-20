@@ -57,7 +57,7 @@
         });
 
         /* Use for API key authentication */
-        const accessToken = "YOUR_ACCESS_TOKEN";
+        const accessToken = "AAPTxy8BH1VEsoebNVZXo8HurFM4IP3CKzOBfGbNaRN7DGTkgxP46nAEiaHjSxqbrw6aiMwIWH2IyXhAdSXcLVhkADO_JYvbKvIO1ykGKnPNjHKWv4T5_A9ytZHPa5G8ixfknkPoMOllpR7Bne69ShGEmtTARqNx_-7hb2lH_u8r22GaoOwNhoSses0Td9GB7qzmt6zRKcnyV_pk34jvIrqN0nHpwhD4m0_dtxI7atasPUdlVTZfPbPQNvVDdBtwQJ8gAT1_qjNONLvX";
 
         const renderingRule = {
             rasterFunction: "Hillshade",
@@ -133,10 +133,14 @@
             })
             .addTo(map);
 
-        L.esri.Vector.vectorTileLayer(
-            "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
-            { opacity: 1 }
-        ).addTo(map);
+        L.esri.Vector.vectorBasemapLayer("arcgis/imagery", {
+            token: accessToken
+        }).addTo(map);
+
+        // L.esri.Vector.vectorTileLayer(
+        //     "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+        //     { opacity: 1 }
+        // ).addTo(map);
 
         let identifiedPixel;
 
