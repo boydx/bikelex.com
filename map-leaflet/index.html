@@ -12,27 +12,205 @@
     <link rel="stylesheet" href="L.Control.Locate.min.css" />
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         #map {
             height: 300px;
             width: 100%;
-            background-color: aliceblue;
+            background-color: rgba(226, 227, 227);
+            border: #164582 1px solid;
+            /* border-top: none; */
+        }
+
+
+        .popup {
+            font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+        }
+
+        .popup h2,
+        h3 {
+            /* font-size: 1.5rem; */
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+            background: #e2e3e3;
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: rgba(22, 69, 130);
+            color: #fff;
+            /* padding: 1.5rem 2rem; */
+            text-align: center;
+            align-items: center;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(30, 144, 255, 0.08);
+            display: flex;
+            /* gap: 2rem; */
+            /* padding: 2rem; */
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        #title {
+            margin-bottom: 2rem;
+        }
+
+        #btn {
+            background: #ff2d55;
+            color: #fff;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 8px rgba(255, 45, 85, 0.08);
+        }
+
+        #btn:hover {
+            background: #ff5e8a;
+        }
+
+        main {
+            display: flex;
+            gap: 2rem;
+            padding: 1rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-bottom-left-radius: 1.2rem;
+            border-bottom-right-radius: 1.2rem;
+            border: #164582 1px solid;
+            box-shadow: 0 4px 24px rgba(30, 144, 255, 0.07);
+            border-top: none;
+        }
+
+        main div {
+            width: 100%;
+        }
+
+        main h2 {
+            color: rgba(22, 69, 130);
+            font-size: 1.3rem;
+            margin-bottom: 0rem;
+            letter-spacing: 1px;
+        }
+
+        .event-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        #events,
+        #past-events {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+        #events li,
+        #past-events li {
+            width: 100%;
+            background: #f0f6ff;
+            border-radius: 0.7rem;
+            margin-bottom: 1.2rem;
+            padding: 1rem 1.2rem;
+            box-shadow: 0 1px 4px rgba(30, 144, 255, 0.04);
+            transition: background 0.2s;
+        }
+
+        #events li a,
+        #past-events li a {
+            color: #ff2d55;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        #events li a:hover,
+        #past-events li a:hover {
+            color: rgba(22, 69, 130);
+
+            text-decoration: underline;
+        }
+
+        @media (max-width: 900px) {
+
+            main,
+            header {
+                flex-direction: column;
+                gap: 1.5rem;
+                padding: 0.5rem 1rem;
+            }
+
+            #title {
+                margin-bottom: 0;
+            }
+        }
+
+        @media (min-width: 901px) {
+            main {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: #e3eaff;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+
+            /* border-radius: 4px; */
         }
     </style>
 </head>
 
 <body>
-    <div id="map">
-    </div>
     <header>
-        <h1>Events @ Bike Lexington </h1>
-        <button id="btn">Add event</button>
+        <div id="title">
+            <h1>Events @ Bike Lexington </h1>
+            <button id="btn">Add event</button>
+        </div>
+
+
+        <div id="map"></div>
     </header>
+
     <main>
-        <h2>Upcoming</h2>
-        <ul id="events"></ul>
-        <h2>Past</h2>
-        <ul id="past-events"></ul>
+        <div>
+            <h2>Upcoming</h2>
+            <ul id="events"></ul>
+        </div>
+        <div>
+            <h2>Past</h2>
+            <ul id="past-events"></ul>
+        </div>
+
+
     </main>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg=="
         crossorigin=""></script>
@@ -42,14 +220,17 @@
     <script src="https://unpkg.com/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js"
         integrity="sha512-WRT8ZGC7oShPZvcFLUL25MhdK3L9YuoKJKdc2aNXM2C/NZ3Laik62wsV0hCu9NLXO6z2CjLRbQu+hWNjlAA5Ew=="
         crossorigin=""></script>
-    <script src="https://unpkg.com/esri-leaflet-static-basemap-tile@1.1.1/dist/esri-leaflet-static-basemap-tile.js"
-        integrity="sha512-qau4BpQ1dy05lvhLEb8lgDd5lEhHq4RXjEzLKY8v0ZAdNq3rCxZF9JA4COQx9FKF1aQ8sYgdbN7cPgOCLmYiSQ=="
-        crossorigin=""></script>
+    <!-- Esri Leaflet Geocoder -->
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css" />
+    <script src="https://unpkg.com/esri-leaflet-geocoder"></script>
     <script src="https://unpkg.com/esri-leaflet-renderers@3.0.1/dist/esri-leaflet-renderers.js"
         integrity="sha512-ObP+hL762A0l3J0MfLlH5cEfpDiN0ItUJwm71EZ/X/EMsLyOMOW2GQHO8i/nLvseh8n68/UDjIev2nYwCtYqHQ=="
         crossorigin=""></script>
     <script src="Control.FullScreen.js"></script>
     <script src="L.Control.Locate.min.js"></script>
+    <!-- Load ArcGIS REST JS from CDN -->
+    <script src="https://unpkg.com/@esri/arcgis-rest-request@4/dist/bundled/request.umd.js"></script>
+    <script src="https://unpkg.com/@esri/arcgis-rest-routing@4/dist/bundled/routing.umd.js"></script>
     <script>
 
         document.getElementById('btn').addEventListener('click', function () {
@@ -57,7 +238,10 @@
         });
 
         /* Use for API key authentication */
-        const accessToken = "AAPTxy8BH1VEsoebNVZXo8HurFM4IP3CKzOBfGbNaRN7DGTkgxP46nAEiaHjSxqbrw6aiMwIWH2IyXhAdSXcLVhkADO_JYvbKvIO1ykGKnPNjHKWv4T5_A9ytZHPa5G8ixfknkPoMOllpR7Bne69ShGEmtTARqNx_-7hb2lH_u8r22GaoOwNhoSses0Td9GB7qzmt6zRKcnyV_pk34jvIrqN0nHpwhD4m0_dtxI7atasPUdlVTZfPbPQNvVDdBtwQJ8gAT1_qjNONLvX";
+        const accessToken = "AAPTxy8BH1VEsoebNVZXo8HurFM4IP3CKzOBfGbNaRN7DGTkgxP46nAEiaHjSxqbrw6a2jZvAbJ8LhooqHc4wU5fhEVAwZ1oa-6yH1PPonMqJB1102ByzeMYACC13SDTvNozK3EzAlkCs11wen-VI-6-A4gC-bycSgcYJar-_J8exsP6OYjJNhvRQHnO_bQ_9PbNSIwCkLJUmXvXYKcWaVypZczVsSSzsqttg_gEYvEDgpy5ATBnuMcnJFjV7BdFTpJRAT1_Y8dqpj0N";
+
+
+        const may142026 = "AAPTxy8BH1VEsoebNVZXo8HurFM4IP3CKzOBfGbNaRN7DGTkgxP46nAEiaHjSxqbrw6aiMwIWH2IyXhAdSXcLVhkADO_JYvbKvIO1ykGKnPNjHKWv4T5_A9ytZHPa5G8ixfknkPoMOllpR7Bne69ShGEmtTARqNx_-7hb2lH_u8r22GaoOwNhoSses0Td9GB7qzmt6zRKcnyV_pk34jvIrqN0nHpwhD4m0_dtxI7atasPUdlVTZfPbPQNvVDdBtwQJ8gAT1_qjNONLvX";
 
         const renderingRule = {
             rasterFunction: "Hillshade",
@@ -95,7 +279,29 @@
             }
         }).addTo(map);
 
+        // create the geocoding control and add it to the map
+        var searchControl = L.esri.Geocoding.geosearch({
+            providers: [
+                L.esri.Geocoding.arcgisOnlineProvider({
+                    // API Key to be passed to the ArcGIS Online Geocoding Service
+                    apikey: accessToken
+                })
+            ]
+        }).addTo(map);
 
+        // create an empty layer group to store the results and add it to the map
+        var results = L.layerGroup().addTo(map);
+
+        // listen for the results event and add every result to the map
+        searchControl.on("results", function (data) {
+            // results.clearLayers();
+            console.log(results, data)
+            for (var i = data.results.length - 1; i >= 0; i--) {
+                const location = L.marker(data.results[i].latlng)
+                location.bindPopup(data.results[i].properties.Place_addr)
+                results.addLayer(location);
+            }
+        });
 
         const events = L.esri.featureLayer({
             url: "https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0",
@@ -105,11 +311,12 @@
 
         let load = 0;
         events.on('load', iterateFeatures);
-
         events.addTo(map);
 
         const warnings = L.esri.featureLayer({
             url: "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NOAA_short_term_warnings_v1/FeatureServer/0",
+            style: warningsStyle,
+            where: "1=1",
         }).addTo(map);
 
 
@@ -128,17 +335,17 @@
             .imageMapLayer({
                 url: "https://kyraster.ky.gov/arcgis/rest/services/ElevationServices/Ky_DSM_First_Return_5FT_Phase1/ImageServer",
                 renderingRule: renderingRule,
-                opacity: 0.3,
+                opacity: 0.25,
                 // useCors: false
             })
             .addTo(map);
 
-        L.esri.Vector.vectorBasemapLayer("arcgis/imagery", {
+        L.esri.Vector.vectorBasemapLayer("2d4ff83a65fc4decbdf9ba58bde913bb", {
             token: accessToken
         }).addTo(map);
 
         // L.esri.Vector.vectorTileLayer(
-        //     "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+        //     "https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer",
         //     { opacity: 1 }
         // ).addTo(map);
 
@@ -162,6 +369,18 @@
                 });
         });
 
+        function warningsStyle(feature) {
+            console.log(feature)
+            const style = {
+                color: "#ff2d55",
+                fillColor: "#ff2d55",
+                fillOpacity: 0.5,
+                weight: 1,
+                opacity: 1,
+            };
+            return style
+        }
+
         function initialStyle(feature) {
             const today = new Date();
             const oneWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -169,10 +388,11 @@
             const props = feature.properties;
             const startDate = new Date(props.date_and_time_of_the_event);
             const style = {
-                color: "blue",
-                fillColor: "blue",
+                color: "#164582",
+                fillColor: "rgba(22, 69, 130)",
                 fillOpacity: 0.5,
                 weight: 1,
+                radius: 7,
                 opacity: 1,
             };
             if (startDate < pastWeek) {
@@ -244,12 +464,11 @@
                         // return
                     }
                 });
-                l.img = props.img ? props.img + "?w=400" : "https://live.staticflickr.com/4452/37229750374_cebbe47821_w.jpg";
-                const popupContent = `<h2>${l.title}</h2><h3>${l.time}</h3>
+                l.img = props.img ? props.img + "?w=600" : "https://live.staticflickr.com/4452/37229750374_cebbe47821_w.jpg";
+                const popupContent = `<div class="popup"><h2>${l.title}</h2><h3>${l.time}</h3>
                 <p><a href="${l.googleMapsLink}">${l.location}</a></p>
-                <p>For: ${l.audience}</p>
-                    <img src="${l.img}" alt="Event Image" style="width: 300px; height: auto;">
-                    <p>${l.desc}</p>`;
+                    <img src="${l.img}" alt="Event Image" class="event-image" style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem; margin-top: 0rem;">
+                    </div>`;
                 layer.bindPopup(popupContent);
                 content.push(l);
             });
@@ -259,15 +478,18 @@
 
             content.forEach(event => {
                 const listItem = document.createElement('li');
-                const { title, date, time, location, desc, url, organizer, googleMapsLink } = event;
+                const { title, date, time, location, desc, url, organizer, googleMapsLink, img, audience } = event;
                 const formattedDate = new Date(date).toLocaleDateString('en-US', {
                     timeZone: 'UTC',
                     month: 'long',
                     day: 'numeric'
                 });
-                listItem.innerHTML += `<a href="${url}">${title}</a> on ${time} by ${organizer}
-                            <br>${desc}
-                            <br>Start: <a href="${googleMapsLink}">${location}</a>, ${time}`;
+                listItem.innerHTML += `<strong><a href="${url}">${title}</a> <br>${time}
+                    <br><a href="${googleMapsLink}">${location}</a></strong>
+                    <br>For: ${audience}
+                    <br><img src="${img}" alt="Event Image" class="event-image">
+                <br>${desc}
+                    `;
                 if (new Date(date) > today) {
                     eventsList.appendChild(listItem);
                 } else {
@@ -276,6 +498,59 @@
             })
         }
 
+        // const clickedPoints = L.layerGroup().addTo(map);
+        // const serviceAreas = L.layerGroup().addTo(map);
+
+        // const authentication = arcgisRest.ApiKeyManager.fromKey(accessToken);
+
+        // events.on("click", (e) => {
+        //     clickedPoints.clearLayers();
+        //     serviceAreas.clearLayers();
+
+        //     L.marker(e.latlng).addTo(clickedPoints);
+        //     const travelMode = { "attributeParameterValues": [{ "parameterName": "Restriction Usage", "attributeName": "Walking", "value": "PROHIBITED" }, { "parameterName": "Restriction Usage", "attributeName": "Preferred for Pedestrians", "value": "PREFER_LOW" }, { "parameterName": "Walking Speed (km/h)", "attributeName": "WalkTime", "value": 5 }], "description": "Follows paths and roads that allow pedestrian traffic and finds solutions that optimize travel time. The walking speed is set to 5 kilometers per hour.", "impedanceAttributeName": "WalkTime", "simplificationToleranceUnits": "esriMeters", "uturnAtJunctions": "esriNFSBAllowBacktrack", "restrictionAttributeNames": ["Preferred for Pedestrians", "Walking"], "useHierarchy": false, "simplificationTolerance": 2, "timeAttributeName": "WalkTime", "distanceAttributeName": "Miles", "type": "WALK", "id": "caFAgoThrvUpkFBW", "name": "Walking Time" }
+
+        //     console.log(arcgisRest.serviceArea)
+
+        //     arcgisRest
+        //         .serviceArea({
+        //             endpoint: "https://route-api.arcgis.com/arcgis/rest/services/World/ServiceAreas/NAServer/ServiceArea_World/solveServiceArea",
+        //             authentication,
+        //             facilities: [[e.latlng.lng, e.latlng.lat]],
+        //             impedanceAttributeName: "WalkTime",
+        //             travelMode: travelMode,
+        //             defaultBreaks: [0, 1, 2],
+        //         })
+
+        //         .then((response) => {
+        //             L.geoJSON(response.saPolygons.geoJson, {
+
+
+        //                 style: (feature) => {
+        //                     console.log(feature.properties)
+        //                     const style = {
+        //                         fillOpacity: 0.5,
+        //                         weight: 1
+        //                     };
+        //                     if (feature.properties.FromBreak === 0) {
+        //                         style.color = "hsl(210, 80%, 40%)";
+        //                     } else if (feature.properties.FromBreak === 5) {
+        //                         style.color = "hsl(210, 80%, 60%)";
+        //                     } else {
+        //                         style.color = "hsl(210, 80%, 80%)";
+        //                     }
+        //                     return style;
+        //                 }
+
+        //             }
+        //             ).addTo(serviceAreas);
+        //         })
+        //         .catch((error) => {
+        //             console.error(error);
+        //             alert("There was a problem using the route service. See the console for details.");
+        //         });
+
+        // });
 
 
 
