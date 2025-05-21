@@ -185,7 +185,7 @@
         }
 
         #modal .container {
-            width: 500px;
+            width: 60%;
             margin: 10px auto;
             padding: 5px 20px;
             position: relative;
@@ -530,10 +530,21 @@
                 return
             }
             load++;
+            const bounds = new L.LatLngBounds();
+            events.eachFeature(function (layer) {
+
+            });
             const promises = [];
             events.eachFeature(function (layer) {
                 const attachments = `https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0/${layer.feature.id}/attachments/?f=json`
                 promises.push(fetch(attachments).then(response => response.json()));
+                const latlng = layer.feature.geometry.coordinates;
+                const latlng2 = L.latLng(latlng[1], latlng[0]);
+                bounds.extend(latlng2);
+            });
+            map.fitBounds(bounds, {
+                padding: [20, 20],
+                animate: false,
             });
             try {
                 const data = await Promise.all(promises);
