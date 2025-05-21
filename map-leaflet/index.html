@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Events @ Bike Lex</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdLE3w=="
         crossorigin="" />
@@ -491,7 +491,7 @@
 
         let identifiedPixel;
 
-        map.on("click", function (e) {
+        map.on("contextmenu", function (e) {
             if (identifiedPixel) {
                 console.log(identifiedPixel);
             }
@@ -505,6 +505,13 @@
                     }
 
                     identifiedPixel = results.pixel;
+                    const popup = L.popup()
+                        .setLatLng(e.latlng)
+                        .setContent(
+                            `The thing you right-clicked is ${identifiedPixel.properties.value} feet ASL. 
+                            Click around the area to see how high it is.`
+                        )
+                        .openOn(map);
                     console.log(identifiedPixel.properties.value + " feet");
                 });
         });
@@ -681,7 +688,7 @@
                 listItem.innerHTML += `<strong><span style="font-size:1.25rem;">${title}</span> <br>${time}
                     <br><a href="${googleMapsLink}">${location}</a></strong>
                     <br>For: ${audience}
-                    <br><img src="${img}" alt="Event Image" class="event-image">
+                    <br><a href="${img}"><img src="${img}" alt="Event Image" class="event-image"></a>
                 <br>${desc}
                     `;
 
