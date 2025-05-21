@@ -516,11 +516,11 @@
 
             if (startDate > oneWeek) {
                 style.opacity = 0
-                style.fillOpacity = 1
+                style.fillOpacity = 0.8
             } else if (startDate > today) {
                 style.opacity = 1
                 style.fillOpacity = 1
-                style.fillColor = "green"
+                style.fillColor = "#ff2d55"
             }
             return style
         }
@@ -535,10 +535,18 @@
 
             });
             const promises = [];
+            const lngLatList = [];
             events.eachFeature(function (layer) {
                 const attachments = `https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0/${layer.feature.id}/attachments/?f=json`
                 promises.push(fetch(attachments).then(response => response.json()));
                 const latlng = layer.feature.geometry.coordinates;
+                console.log(latlng)
+                lngLatList.find(element => {
+                    if (element[0] == latlng[0] && element[1] == latlng[1]) {
+                        console.log("duplicate")
+                        layer.feature.geometry.coordinates = [latlng[0] + 0.0001, latlng[1] + 0.0001]
+                    }
+                })
                 const latlng2 = L.latLng(latlng[1], latlng[0]);
                 bounds.extend(latlng2);
             });
@@ -581,11 +589,16 @@
                 data.find(element => {
                     if (element.attachmentInfos[0].parentGlobalId === props.globalid) {
                         props.img = `https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0/${layer.feature.id}/attachments/${element.attachmentInfos[0].id}`;
-
-                        // return
                     }
                 });
-                l.img = props.img ? props.img + "?w=600" : "https://live.staticflickr.com/4452/37229750374_cebbe47821_w.jpg";
+                l.img = "https://live.staticflickr.com/4452/37229750374_cebbe47821_w.jpg";
+                if (props.img) {
+                    l.img = props.img;
+                } else if (l.audience == "Bike") {
+                    l.img = "./images/bikes.jpg"
+                } else if (l.audience == "Run") {
+                    l.img = "https://live.staticflickr.com/65535/48046945597_031d823130_b.jpg"
+                }
                 const popupContent = `<div class="popup"><h2>${l.title}</h2><h3>${l.time}</h3>
                 <p><a href="${l.googleMapsLink}">${l.location}</a></p>
                     <img src="${l.img}" alt="Event Image" class="event-image" style="width: 300px; height: 100px; object-fit: cover; border-radius: 0.5rem; margin-top: 0;">
@@ -605,7 +618,7 @@
                     month: 'long',
                     day: 'numeric'
                 });
-                listItem.innerHTML += `<strong><a href="${url}" style="font-size:1.25rem;">${title}</a> <br>${time}
+                listItem.innerHTML += `<strong><span style="font-size:1.25rem;">${title}</span> <br>${time}
                     <br><a href="${googleMapsLink}">${location}</a></strong>
                     <br>For: ${audience}
                     <br><img src="${img}" alt="Event Image" class="event-image">
