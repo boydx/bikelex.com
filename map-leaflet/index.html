@@ -5,19 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events @ Bike Lex</title>
+    <!-- Esri Leaflet Geocoder -->
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdLE3w=="
         crossorigin="" />
-    <link rel="stylesheet" href="Control.FullScreen.css" />
-    <link rel="stylesheet" href="L.Control.Locate.min.css" />
+    <link rel="stylesheet" href="./src/Control.FullScreen.css" />
+    <link rel="stylesheet" href="./src/L.Control.Locate.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css" />
 
     <style>
         * {
             box-sizing: border-box;
         }
 
+        .geocoder-control-suggestions .geocoder-control-suggestion {
+            color: #222;
+        }
 
-
+        .geocoder-control-suggestions .geocoder-control-suggestion:hover {
+            background: #164582;
+            color: #fff;
+        }
 
         body {
             font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
@@ -344,14 +353,13 @@
     <script src="https://unpkg.com/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js"
         integrity="sha512-WRT8ZGC7oShPZvcFLUL25MhdK3L9YuoKJKdc2aNXM2C/NZ3Laik62wsV0hCu9NLXO6z2CjLRbQu+hWNjlAA5Ew=="
         crossorigin=""></script>
-    <!-- Esri Leaflet Geocoder -->
-    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css" />
+
     <script src="https://unpkg.com/esri-leaflet-geocoder"></script>
     <script src="https://unpkg.com/esri-leaflet-renderers@3.0.1/dist/esri-leaflet-renderers.js"
         integrity="sha512-ObP+hL762A0l3J0MfLlH5cEfpDiN0ItUJwm71EZ/X/EMsLyOMOW2GQHO8i/nLvseh8n68/UDjIev2nYwCtYqHQ=="
         crossorigin=""></script>
-    <script src="Control.FullScreen.js"></script>
-    <script src="L.Control.Locate.min.js"></script>
+    <script src="./src/Control.FullScreen.js"></script>
+    <script src="./src/L.Control.Locate.min.js"></script>
     <!-- Load ArcGIS REST JS from CDN -->
     <!-- <script src="https://unpkg.com/@esri/arcgis-rest-request@4/dist/bundled/request.umd.js"></script>
     <script src="https://unpkg.com/@esri/arcgis-rest-routing@4/dist/bundled/routing.umd.js"></script> -->
@@ -377,10 +385,6 @@
         });
 
         /* Use for API key authentication */
-        const accessToken = "AAPTxy8BH1VEsoebNVZXo8HurFM4IP3CKzOBfGbNaRN7DGTkgxP46nAEiaHjSxqbrw6a2jZvAbJ8LhooqHc4wU5fhEVAwZ1oa-6yH1PPonMqJB1102ByzeMYACC13SDTvNozK3EzAlkCs11wen-VI-6-A4gC-bycSgcYJar-_J8exsP6OYjJNhvRQHnO_bQ_9PbNSIwCkLJUmXvXYKcWaVypZczVsSSzsqttg_gEYvEDgpy5ATBnuMcnJFjV7BdFTpJRAT1_Y8dqpj0N";
-
-
-        const may142026 = "AAPTxy8BH1VEsoebNVZXo8HurFM4IP3CKzOBfGbNaRN7DGTkgxP46nAEiaHjSxqbrw6aiMwIWH2IyXhAdSXcLVhkADO_JYvbKvIO1ykGKnPNjHKWv4T5_A9ytZHPa5G8ixfknkPoMOllpR7Bne69ShGEmtTARqNx_-7hb2lH_u8r22GaoOwNhoSses0Td9GB7qzmt6zRKcnyV_pk34jvIrqN0nHpwhD4m0_dtxI7atasPUdlVTZfPbPQNvVDdBtwQJ8gAT1_qjNONLvX";
 
         const renderingRule = {
             rasterFunction: "Hillshade",
@@ -420,6 +424,9 @@
 
         // create the geocoding control and add it to the map
         var searchControl = L.esri.Geocoding.geosearch({
+            position: "topright",
+            placeholder: "Address or place e.g., Charles Young Park",
+            useMapBounds: true,
             providers: [
                 L.esri.Geocoding.arcgisOnlineProvider({
                     // API Key to be passed to the ArcGIS Online Geocoding Service
@@ -429,7 +436,7 @@
         }).addTo(map);
 
         // create an empty layer group to store the results and add it to the map
-        var results = L.layerGroup().addTo(map);
+        let results = L.layerGroup().addTo(map);
 
         // listen for the results event and add every result to the map
         searchControl.on("results", function (data) {
@@ -607,7 +614,6 @@
                 const attachments = `https://services.arcgis.com/vQ8kO5zdqETeirEL/arcgis/rest/services/survey123_4007df86a6cc43859714e9423756a263_results/FeatureServer/0/${layer.feature.id}/attachments/?f=json`
                 promises.push(fetch(attachments).then(response => response.json()));
                 const latlng = layer.feature.geometry.coordinates;
-                console.log(latlng)
                 lngLatList.find(element => {
                     if (element[0] == latlng[0] && element[1] == latlng[1]) {
                         console.log("duplicate")
@@ -617,10 +623,14 @@
                 const latlng2 = L.latLng(latlng[1], latlng[0]);
                 bounds.extend(latlng2);
             });
-            map.fitBounds(bounds, {
-                padding: [20, 20],
-                animate: false,
-            });
+            try {
+                map.fitBounds(bounds, {
+                    padding: [20, 20],
+                    animate: false,
+                });
+            } catch (error) {
+                alert("Try refreshing the page");
+            }
             try {
                 const data = await Promise.all(promises);
                 const filtered = data.filter(item => item.attachmentInfos.length !== 0);
@@ -632,7 +642,6 @@
 
         }
         function makeContent(events, data) {
-            console.log(events)
             const content = [];
             const today = new Date();
             events.eachFeature(layer => {
